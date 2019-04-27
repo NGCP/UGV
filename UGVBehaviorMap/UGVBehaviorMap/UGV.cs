@@ -396,6 +396,8 @@ namespace NGCP.UGV
         /// </summary>
         public bool CommOverride { get; private set; }
 
+        public UGVXbee xbee;
+
         /// <summary>
         /// IMU of UGV
         /// </summary>
@@ -836,52 +838,15 @@ namespace NGCP.UGV
             #region Communication Connection
             // commented out the snippen of code until required libraries are included
             ////open communication port
-            if (Settings.UseCommProtocol)
+            if (Settings.UseUGVXbee)
             {
+                UGVXbee xbee = new UGVXbee(Settings.CommPort, Settings.CommBaud, Settings.CommAddress);
 
-
-                commProtocol = new CommProtocol(Settings.CommNode);
-                commProtocol.initializeConnection(Settings.CommPort, Settings.CommBaud);
-                //parse address to add
-                //this is a bad way to do this should be changed michael wallace 5/12/2017
-                string[] words = Settings.CommAddresses.Split(null);
-                int[] destNode = Array.ConvertAll(words.Where((str, ix) => ix % 2 == 0).ToArray(), int.Parse);//even
-                string[] destAddress = words.Where((str, ix) => ix % 2 == 1).ToArray();//odd
-                if (destNode.Length == destAddress.Length)
-                {
-                    for (int x = 0; x < destNode.Length; x++)
-                    {
-                        commProtocol.addAddress(destNode[x], destAddress[x]);
-                    }
-                }
-                //link call backs
-                commProtocol.LinkCallback(new NGCP.VehicleWaypointCommand(), new Comnet.CallBack(VehicleWaypointCommandCallback));
-                commProtocol.LinkCallback(new NGCP.VehicleModeCommand(), new Comnet.CallBack(VehicleModeCommandCallback));
-                commProtocol.LinkCallback(new NGCP.ArmCommand(), new Comnet.CallBack(ArmCommandCallback));
-                commProtocol.LinkCallback(new NGCP.VehicleSystemStatus(), new Comnet.CallBack(VehicleSystemStatusCallback)); 
-                commProtocol.LinkCallback(new NGCP.SpeedSteeringCommand(), new Comnet.CallBack(SpeedSteeringCallback));
-
-                commProtocol.start();
-            }
-            else if(Settings.UseXBeeComm)
-            {
-                //construct xbee
-                Xbee = new Serial(Settings.CommPort, Settings.CommBaud);
-                Xbee.EscapeToken = new byte[] { 253, 254, 255 };
-                Links.Add("XBee", Xbee);
-                //define callback
-                Xbee.PackageReceived = (bytes =>
-                {
-                    Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
-                    if (bytes.Length != 4)
-                        return;
-                    if (bytes[0] != 0 || bytes[3] != 0)
-                        return;
-                    CommWheel = bytes[1];
-                    CommSteering = bytes[2];
-                });
-                //start                
-                Xbee.Start();
+                xbee.ReceiveConnectionAck = (o, eventArgs) => {}; // start sending update messages
+                xbee.ReceiveAddMission = (o, eventArgs) => {}; // start task
+                xbee.ReceivePause = (o, eventArgs) => {}; // pause
+                xbee.ReceiveResume = (o, eventArgs) => {}; // resume
+                xbee.ReceiveStop = (o, eventArgs) => {}; // stop mission
             }
 
             #endregion Communication Connection
@@ -1814,10 +1779,8 @@ namespace NGCP.UGV
             public bool UseFPGA = true;
             public string CommPort = "COM0";
             public int CommBaud = 57600;
-            public int CommNode = 1;
-            public string CommAddresses = "";
-            public bool UseXBeeComm = true;
-            public bool UseCommProtocol = true;
+            public string CommAddress = "";
+            public bool UseUGVXbee = true;
             public byte SteeringLimit = 127; //94
             public bool UseVision = true;
             public bool UseCamera = true;

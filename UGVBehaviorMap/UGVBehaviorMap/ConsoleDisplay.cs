@@ -71,12 +71,10 @@ namespace UGVBehaviorMap
                 {"UseFPGA", "False"},
                 {"FPGAPort", "COM7"},
                 {"FPGABaud", "9600"},
-                {"UseXBeeComm", "False"},
-                {"UseCommProtocol", "False"},
+                {"UseUGVXbee", "False"},
                 {"CommPort", "COM3"},
                 {"CommBaud", "57600"},
-                {"CommNode", "5"},
-                {"CommAddresses", "1 0013A2004067E4AE 100 0013A20040A5430F"},
+                {"CommAddress", "0013A2004067E4AE"},
                 {"UseNav", "False"},
                 {"NavPort", "COM9"},
                 {"NavBaud", "57600"},
@@ -108,8 +106,7 @@ namespace UGVBehaviorMap
 
             //read configuration
             ugv.Settings.UseFPGA = Boolean.Parse(Settings["UseFPGA"]);
-            ugv.Settings.UseXBeeComm = Boolean.Parse(Settings["UseXBeeComm"]);
-            ugv.Settings.UseCommProtocol = Boolean.Parse(Settings["UseCommProtocol"]);
+            ugv.Settings.UseUGVXbee = Boolean.Parse(Settings["UseUGVXbee"]);
             ugv.Settings.UseNav = Boolean.Parse(Settings["UseNav"]);
             ugv.Settings.UseVision = Boolean.Parse(Settings["UseVision"]);
             ugv.Settings.UseCamera = Boolean.Parse(Settings["UseCamera"]);
@@ -117,8 +114,7 @@ namespace UGVBehaviorMap
             ugv.Settings.FPGABaud = Convert.ToInt32(Settings["FPGABaud"]);
             ugv.Settings.CommPort = Settings["CommPort"];
             ugv.Settings.CommBaud = Convert.ToInt32(Settings["CommBaud"]);
-            ugv.Settings.CommNode = Convert.ToInt32(Settings["CommNode"]);
-            ugv.Settings.CommAddresses = (Settings["CommAddresses"]);
+            ugv.Settings.CommAddress = (Settings["CommAddress"]);
             ugv.Settings.NavPort = Settings["NavPort"];
             ugv.Settings.NavBaud = Convert.ToInt32(Settings["NavBaud"]);
             ugv.Settings.ArmPort = Settings["ArmPort"];
@@ -169,9 +165,7 @@ namespace UGVBehaviorMap
             //start ugv
             try
             {
-                //ugv.Start();
-                UGVXbee XBee = new UGVXbee();
-                XBee.ReceiveStart += (o, EventArgs) => ugv.Start();
+                ugv.Start();
                 timer.Start();
                 #if logging
                 logTimer.Start();
