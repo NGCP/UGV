@@ -20,18 +20,18 @@ namespace UGVBehaviorMap
         private readonly XBeeController Xbee = new XBeeController();
         private XBeeNode ToXbee;
 
-        public event EventHandler<MessageEventArgs> ReceiveConnectionAck;
-        public event EventHandler<MessageEventArgs> ReceiveAddMission;
-        public event EventHandler<MessageEventArgs> ReceivePause;
-        public event EventHandler<MessageEventArgs> ReceiveResume;
-        public event EventHandler<MessageEventArgs> ReceiveStop;
+        public event EventHandler<ReceiveConnAckEventArgs> ReceiveConnAck;
+        public event EventHandler<ReceiveAddMissionEventArgs> ReceiveAddMission;
+        public event EventHandler<ReceivePauseEventArgs> ReceivePause;
+        public event EventHandler<ReceiveResumeEventArgs> ReceiveResume;
+        public event EventHandler<ReceiveStopEventArgs> ReceiveStop;
 
         private readonly Dictionary<int, Timer> TimerOutbox = new Dictionary<int, Timer>();
         private readonly Dictionary<int, int> LastReceivedMessageId = new Dictionary<int, int>();
 
         public UGVXbee(string PortName, int BaudRate, string DestinationMAC)
         {
-            InitializeConnection(PortName, BaudRate, string DestinationMAC);
+            InitializeConnection(PortName, BaudRate, DestinationMAC);
         }
 
         private async void InitializeConnection(string PortName, int BaudRate, string DestinationMAC)
@@ -212,10 +212,10 @@ namespace UGVBehaviorMap
                 // Set UGV time to GCS time through offset
                 Offset = Msg.Time - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-                MessageEventArgs args = new MessageEventArgs();
+                ReceiveConnAckEventArgs args = new ReceiveConnAckEventArgs();
                 args.Msg = Msg;
-                EventHandler<MessageEventArgs> handler = ReceiveConnectionAck;
-                handler?.Invoke(this, new EventArgs());
+                EventHandler<ReceiveConnAckEventArgs> handler = ReceiveConnAck;
+                handler?.Invoke(this, args);
                 VehicleStatus = "ready";
 
                 Console.WriteLine("Received connection acknowledgement from GCS, systems are ready");
@@ -271,10 +271,10 @@ namespace UGVBehaviorMap
             {
                 LastReceivedMessageId[Msg.Sid] = Msg.Id;
 
-                MessageEventArgs args = new MessageEventArgs();
+                ReceiveAddMissionEventArgs args = new ReceiveAddMissionEventArgs();
                 args.Msg = Msg;
-                EventHandler<MessageEventArgs> handler = ReceiveAddMission;
-                handler?.Invoke(this, new EventArgs());
+                EventHandler<ReceiveAddMissionEventArgs> handler = ReceiveAddMission;
+                handler?.Invoke(this, args);
                 VehicleStatus = "running";
                 Console.WriteLine("Starting {0} Task, Lat: {1}, Lng: {2}", Msg.MissionInfo.TaskType, Msg.MissionInfo.Lat, Msg.MissionInfo.Lng);
             }
@@ -293,10 +293,10 @@ namespace UGVBehaviorMap
             {
                 LastReceivedMessageId[Msg.Sid] = Msg.Id;
 
-                MessageEventArgs args = new MessageEventArgs();
+                ReceivePauseEventArgs args = new ReceivePauseEventArgs();
                 args.Msg = Msg;
-                EventHandler<MessageEventArgs> handler = ReceivePause;
-                handler?.Invoke(this, new EventArgs());
+                EventHandler<ReceivePauseEventArgs> handler = ReceivePause;
+                handler?.Invoke(this, args);
                 VehicleStatus = "paused";
                 Console.WriteLine("Paused task");
             }
@@ -316,10 +316,10 @@ namespace UGVBehaviorMap
             {
                 LastReceivedMessageId[Msg.Sid] = Msg.Id;
 
-                MessageEventArgs args = new MessageEventArgs();
+                ReceiveResumeEventArgs args = new ReceiveResumeEventArgs();
                 args.Msg = Msg;
-                EventHandler<MessageEventArgs> handler = ReceiveResume;
-                handler?.Invoke(this, new EventArgs());
+                EventHandler<ReceiveResumeEventArgs> handler = ReceiveResume;
+                handler?.Invoke(this, args);
                 VehicleStatus = "running";
                 Console.WriteLine("Resumed task");
             }
@@ -337,10 +337,10 @@ namespace UGVBehaviorMap
             {
                 LastReceivedMessageId[Msg.Sid] = Msg.Id;
 
-                MessageEventArgs args = new MessageEventArgs();
+                ReceiveStopEventArgs args = new ReceiveStopEventArgs();
                 args.Msg = Msg;
-                EventHandler<MessageEventArgs> handler = ReceiveStop;
-                handler?.Invoke(this, new EventArgs());
+                EventHandler<ReceiveStopEventArgs> handler = ReceiveStop;
+                handler?.Invoke(this, args);
                 VehicleStatus = "ready";
                 Console.WriteLine("Stopped mission");
             }
@@ -427,7 +427,29 @@ namespace UGVBehaviorMap
         }
     }
 
-    public class MessageEventArgs : EventArgs {
-        public Msg Msg;
+    public class ReceiveConnAckEventArgs : EventArgs
+    {
+        public ConnAckMsg Msg;
     }
+
+    public class ReceiveAddMissionEventArgs : EventArgs
+    {
+        public AddMissionMsg Msg;
+    }
+
+    public class ReceivePauseEventArgs : EventArgs
+    {
+        public PauseMsg Msg;
+    }
+
+    public class ReceiveResumeEventArgs : EventArgs
+    {
+        public ResumeMsg Msg;
+    }
+
+    public class ReceiveStopEventArgs : EventArgs
+    {
+        public StopMsg Msg;
+    }
+
 }
