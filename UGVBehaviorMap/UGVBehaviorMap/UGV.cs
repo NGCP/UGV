@@ -13,11 +13,11 @@ using UGV.Core.Sensors;
 using UGV.Core.IO;
 using UGV.Core.Maths;
 using UGV.Core.Navigation;
-using static UGVBehaviorMap.UGVXbee;
+
 
 //using Comnet;
 
-namespace NGCP.UGV
+namespace UGVBehaviorMap
 {
     public partial class UGV
     {
